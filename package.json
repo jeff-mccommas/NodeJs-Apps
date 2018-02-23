@@ -1,0 +1,24 @@
+{
+  "name": "nodejs-apps",
+  "version": "1.0.0",
+  "description": "node books App",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeff-mccommas/NodeJs-Apps.git"
+  },
+  "author": "jeffrey mccommas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jeff-mccommas/NodeJs-Apps/issues"
+  },
+  "homepage": "https://github.com/jeff-mccommas/NodeJs-Apps#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "mongoose": "^5.0.7"
+  }
+}
