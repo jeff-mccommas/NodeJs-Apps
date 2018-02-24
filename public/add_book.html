@@ -50,6 +50,16 @@
             <div class="form-element">
                 <button type="submit">Add Book</button>
             </div>
+            <script>
+                $ajax({
+                    type:"GET",
+                    url:"http://localhost:3000/api/stores",
+                    success:(data,status,xhr)=>{
+                        
+                    }
+                })
+                
+            </script>
 
         </form>
     </div>
