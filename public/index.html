@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 
@@ -20,9 +21,44 @@
        
         <div class="books_container">
         
+            
+
         </div>
 
     </div>
-
 </body>
+
+<script>
+    
+    $.ajax({
+        type:"GET",
+        url:"/api/books?limit=3&ord=desc",
+        success:(data,status,xhr)=>{
+            let template = ``;
+            data.map((item)=>{
+                template += `
+                <a class="book_item" href="book_edit.html?book_id=${item._id}">
+                    <div class="item name">
+                        <span>Book Name:</span> ${item.name}
+                    </div>
+                    <div class="item author">
+                        <span>Book author:</span> ${item.author}
+                    </div>
+                    <div class="item price">
+                        <span>Book price:</span> ${item.price}
+                    </div>
+                </a> 
+                `
+            });
+            $('.books_container').append(template)
+        },
+        error:(xhr)=>{
+            alert('Something is wrong ...ohhh nooo.')
+        }
+
+    })
+
+</script>
+
+
 </html>
