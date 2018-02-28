@@ -14,6 +14,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/book_db')
 
 const {Book} = require('./models/books');
 const {Store} = require('./models/stores');
+const {User} = require('./models/user');
 
 //POST
 app.post('/api/add/store',(req,res)=>{
