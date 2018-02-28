@@ -1,112 +1,65 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const config = require('./config/config').get(process.env.NODE_ENV)
 
 const app = express();
 
-app.use(express.static(__dirname + '/../public' ));
-app.use(bodyParser.json())
-
-
 // DB
-const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/book_db');
+mongoose.connect(config.DATABASE)
 
-const {Book} = require('./models/books');
-const {Store} = require('./models/stores');
 const {User} = require('./models/user');
+const {auth} = require('./middleware/auth');
+app.use(bodyParser.json());
 
-//POST
-app.post('/api/add/store',(req,res)=>{
-
-    const store = new Store({
-        name:req.body.name,
-        address:req.body.address,
-        phone:req.body.phone
+// POST
+app.post('/api/user',(req,res)=>{
+    const user = new User({
+        email:req.body.email,
+        password:req.body.password
     });
 
-    store.save((err,doc)=>{
+    user.save((err,doc)=>{
         if(err) res.status(400).send(err);
-        res.status(200).send();
-
+        user.generateToken((err,user)=>{
+            if(err) res.status(400).send(err);
+            res.header('x-token',user.token).send(user)
+        })
     })
 });
 
-app.post('/api/add/books',(req,res)=>{
+app.post('/api/user/login',(req,res)=>{
 
-    const book = new Book({
-        name: req.body.name,
-        author: req.body.author,
-        pages:  req.body.pages,
-        price:  req.body.price,
-        stores:  req.body.stores
+    User.findOne({'email':req.body.email},(err,user)=>{
+        if(!user) return res.status(400).json({message:'Auth failed.User not found'});
+
+        user.comparePassword(req.body.password,function(err,isMatch){
+            if(err) throw err;
+            if(!isMatch) return res.status(400).json({message:'Wrong password'});
+
+            user.generateToken((er,user)=>{
+                if(err) return res.status(400).send(err);
+                res.cookie('auth',user.token).send('ok');
+            })
+        })
+    })
+})
+
+
+app.get('/user/profile',auth,(req,res)=>{
+    res.status(200).send(req.token);
+})
+
+app.delete('/user/logout',auth,(req,res)=>{
+    req.user.deleteToken(req.token,(err,user)=>{
+        if(err) res.status(400).send(err);
+        res.status(200).send()
     });
-
-    book.save((err,doc)=>{
-        if(err) res.status(400).send(err);
-        res.status(200).send();
-    })
-
 })
 
 
-// GET
-app.get('/api/stores',(req,res)=>{
-
-    Store.find((err,doc)=>{
-        if(err) res.status(400).send(err);
-        res.send(doc)
-    })
-
-})
-
-
-app.get('/api/books',(req,res)=>{
-
-    let limit = req.query.limit ? parseInt(req.query.limit) : 10;
-    let order = req.query.ord ? req.query.ord : 'asc';
-
-    Book.find().sort({_id:order}).limit(limit).exec((err,doc)=>{
-        if(err) res.status(400).send(err);
-        res.send(doc)
-    })
-
-})
-
-
-app.get('/api/books/:id',(req,res)=>{
-    Book.findById(req.params.id,(err,doc)=>{
-        if(err) res.status(400).send(err);
-        res.send(doc)
-    })
-})
-
-
-/// PATCH
-
-app.patch('/api/add/books/:id',(req,res)=>{
-
-    Book.findByIdAndUpdate(req.params.id,{$set:req.body},{new:true},(err,doc)=>{
-        if(err) res.status(400).send(err);
-        res.send(doc)
-    })
-
-})
-
-/// DELETE
-
-app.delete('/api/delete/books/:id',(req,res)=>{
-
-    Book.findByIdAndRemove(req.params.id,(err,doc)=>{
-        if(err) res.status(400).send(err);
-        res.status(200).send();
-    })
-
-})
-
-
-
-const port = process.env.PORT || 3000;
-app.listen(port,()=>{
-    console.log(`Started at port ${port}`)
-})
+app.listen(config.PORT,()=>{
+    console.log(`Started on port ${config.PORT}`)
+});
